@@ -1,0 +1,161 @@
+// src/components/Signup.tsx
+import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { useAuthStore } from '../store/authStore';
+
+interface SignupProps {
+  onSwitchToLogin: () => void;
+  onClose: () => void;
+  onAuthSuccess?: () => void; // Add this prop
+}
+
+export default function Signup({ onSwitchToLogin, onClose, onAuthSuccess }: SignupProps) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const { register, isLoading } = useAuthStore();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      await register(name, email, password);
+      // Call onAuthSuccess after successful registration
+      if (onAuthSuccess) {
+        onAuthSuccess();
+      }
+      onClose(); // Close the modal
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Create Account 🎉</h2>
+        <p className="text-slate-600">Sign up to get started with Habit Coach</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"
+          >
+            {error}
+          </motion.div>
+        )}
+
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+            Full Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            placeholder="Enter your full name"
+            required
+            disabled={isLoading}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="signup-email" className="block text-sm font-medium text-slate-700 mb-1">
+            Email Address
+          </label>
+          <input
+            id="signup-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            placeholder="Enter your email"
+            required
+            disabled={isLoading}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="signup-password" className="block text-sm font-medium text-slate-700 mb-1">
+            Password
+          </label>
+          <input
+            id="signup-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            placeholder="Create a password (min. 6 characters)"
+            required
+            disabled={isLoading}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 mb-1">
+            Confirm Password
+          </label>
+          <input
+            id="confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            placeholder="Confirm your password"
+            required
+            disabled={isLoading}
+          />
+        </div>
+
+        <motion.button
+          type="submit"
+          disabled={isLoading}
+          whileHover={{ scale: isLoading ? 1 : 1.02 }}
+          whileTap={{ scale: isLoading ? 1 : 0.98 }}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Creating Account...
+            </div>
+          ) : (
+            'Create Account'
+          )}
+        </motion.button>
+      </form>
+
+      <div className="mt-6 text-center">
+        <p className="text-slate-600">
+          Already have an account?{' '}
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="text-blue-500 hover:text-blue-600 font-medium transition"
+            disabled={isLoading}
+          >
+            Sign in
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
